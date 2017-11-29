@@ -2,6 +2,8 @@ package com.example.controller;
 
 import javax.validation.Valid;
 
+import com.example.model.Role;
+import com.example.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,11 +16,15 @@ import org.springframework.web.servlet.ModelAndView;
 import com.example.model.User;
 import com.example.service.UserService;
 
+import java.util.Set;
+
 @Controller
 public class LoginController {
 	
 	@Autowired
 	private UserService userService;
+	@Autowired
+	RoleRepository roleRepository = null;
 
 	@RequestMapping(value={"/", "/login"}, method = RequestMethod.GET)
 	public ModelAndView login(){
@@ -30,9 +36,15 @@ public class LoginController {
 	
 	@RequestMapping(value="/registration", method = RequestMethod.GET)
 	public ModelAndView registration(){
+		roleRepository.findAll();
+
 		ModelAndView modelAndView = new ModelAndView();
 		User user = new User();
+		Role role = new Role();
+
 		modelAndView.addObject("user", user);
+		modelAndView.addObject("role",role);
+
 		modelAndView.setViewName("registration");
 		return modelAndView;
 	}
@@ -63,8 +75,16 @@ public class LoginController {
 		ModelAndView modelAndView = new ModelAndView();
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		User user = userService.findUserByEmail(auth.getName());
-		modelAndView.addObject("userName", "Welcome " + user.getName() + " " + user.getLastName() + " (" + user.getEmail() + ")");
+		Set<Role> roles = user.getRoles();
+		String userRole = null;
+		for(Role role: roles){
+			userRole = role.getRole();
+		}
+
+		modelAndView.addObject("userName", "Welcome " + user.getName() + " "
+				+ user.getLastName() + "Role: " + userRole + "add" + " (" + user.getEmail() + ")");
 		modelAndView.addObject("adminMessage","Content Available Only for Users with Admin Role");
+		modelAndView.addObject("roles","roles");
 		modelAndView.setViewName("admin/home");
 		return modelAndView;
 	}
